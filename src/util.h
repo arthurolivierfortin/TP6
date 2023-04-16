@@ -37,8 +37,11 @@ typedef struct newclient NewClient;
 
 void printS(char*s);
 NewVol* CreateVol();
-void menu(int*p_debut);
-int choisir(int*p_debut);
+void menu(int*p_debut, int *p_client);
+int choisir(int*p_debut, int *p_client);
 NewClient* CreateClient(NewVol *vol);
 void printLesVol(NewVol*vol);
 void printVol(NewVol*Vol);
+void rechercherPlaceDispo(NewVol*vol);
+void regarderVolClient(NewVol*vol, NewClient* client);
+int verifDate(int date);

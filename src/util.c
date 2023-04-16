@@ -44,7 +44,21 @@ NewVol* CreateVol(){
     printf("\nEntrez le nombre de place totale de l'avion: ");
     scanf("%d", &nmbPlaceTotale);
 
-    
+    int verifDatee = verifDate(date);
+
+    if(verifDatee==0){
+        
+        while(1){
+            printf("La date n'est pas correct\n");
+            printf("\nEntrez la date (AAAAMMJJ): ");
+            scanf("%d", &date);
+            verifDatee = verifDate(date);
+            if(verifDatee==1){
+                break;
+            }
+        }
+
+    }
     system("clear");
 
     vol->numVol = numVol;
@@ -79,6 +93,23 @@ NewVol* CreateVol(){
 
 }
 
+int verifDate(int date){
+    int année = date/10000;
+    int mois = ((date/100)-année*100);
+    int jour = date-(mois)*100-année*10000;
+
+    if(mois>12 || mois<1){
+        return PASCORRECT;
+    }
+
+    if(jour>31 || jour<1){
+        return PASCORRECT;
+    }
+
+    return CORRECT;
+
+}
+
 void printS(char*s){
     int i=0;
     while(1){
@@ -92,9 +123,9 @@ void printS(char*s){
     }
 }
 
-int choisir(int*p_debut){
+int choisir(int*p_debut, int *p_client){
 
-    menu(p_debut);
+    menu(p_debut, p_client);
 
     int choix;
     scanf("%d", &choix);
@@ -103,13 +134,20 @@ int choisir(int*p_debut){
 
 }
 
-void menu(int *p_debut){
+void menu(int *p_debut, int *p_client){
 
     system("clear");
     printf("Que voulez-vous faire?\n");
     printf("1- créer un nouveau vol\n");
     if(*p_debut==0){
         printf("2- créer un nouveau client\n");
+    }
+    if(*p_debut==0){
+        printf("3- voir le nombre de places diponibles dans un vol\n");
+    }
+
+    if(*p_debut==0 && *p_client==1){
+        printf("4- voir le vol d'un client\n");
     }
 
     
@@ -122,6 +160,7 @@ void printVol(NewVol*vol){
     int jour = vol->dateDepart.date-(mois)*100-année*10000;
     int heure = vol->dateDepart.heure/100;
     int min = vol->dateDepart.heure-heure*100;
+
     
     printf("numéro du vol : %ld\n", vol->numVol);
     printf("Aeroport de départ : ");
@@ -130,7 +169,7 @@ void printVol(NewVol*vol){
     printf("Aeroport d'arrivée : ");
     printS(vol->aeroportArrivée);
     printf("\n");
-    printf("nombnre de places disponibles : %d\n", vol->nmbPlaceDispo);
+    printf("nombre de places disponibles : %d\n", vol->nmbPlaceDispo);
     printf("Date de départure : %d/%d/%d à %d:%d\n", année, mois, jour, heure, min);
     sleep(1);
 }
@@ -156,10 +195,13 @@ int rechercherVol(NewVol *vol, long int numVole){
 
     printf("Voici les vols existants :\n");
 
-    printLesVol(vol);
+
     while(1){
         if(vol->numVol==numVole){
-            vol->nmbPlaceDispo-=1;
+            if(vol->nmbPlaceDispo<=0){
+                printf("Ce vol n'a plus de place disponible\n");
+                return PASCORRECT;
+            }
             return CORRECT;
         }
         if(vol->suivant==NULL){
@@ -196,6 +238,7 @@ NewClient* CreateClient(NewVol *vol){
 
     system("clear");
     NewClient *client;
+    NewVol * Vole = vol;
     long int numPasseport;
     char nom[100];
     char prenom[100];
@@ -219,17 +262,44 @@ NewClient* CreateClient(NewVol *vol){
     scanf("%d", &dateNaissanceDate);
     printf("\n");
 
+    int verifDatee = verifDate(dateNaissanceDate);
+
+    if(verifDatee==0){
+        
+        while(1){
+            printf("La date n'est pas correct\n");
+            printf("\nEntrez la date (AAAAMMJJ): ");
+            scanf("%d", &dateNaissanceDate);
+            verifDatee = verifDate(dateNaissanceDate);
+            if(verifDatee==1){
+                break;
+            }
+        }
+
+    }
+
     dateNaissanceHeure == NULL;
 
     
     printf("Quel est le numéro de vol du client?\n");
-    printf("Voici les vols existants: \n");
+    printf("Voici les vols existants: \n\n");
     printLesVol(vol);
     scanf("%ld", &numVol);
 
     int verif = rechercherVol(vol, numVol);
     if(verif==1){
         client->numVol = numVol;
+        while(1){
+            
+            if(Vole->numVol==numVol){
+                Vole->nmbPlaceDispo-=1;
+                break;
+            }
+            if(Vole->suivant==NULL){
+                break;
+            }
+
+        }
     }
     if(verif==0){
         int x=0;
@@ -278,7 +348,9 @@ NewClient* CreateClient(NewVol *vol){
     client->dateNaissance.heure = dateNaissanceHeure;
     client->suivant = NULL;
 
-
+    system("clear");
+    printf("Voici les informations du nouveau client :\n");
+    sleep(1);
     printClient(client);
 
     printf("\nEst-ce correct?\n");
@@ -289,6 +361,140 @@ NewClient* CreateClient(NewVol *vol){
     if(y==2){
         vol = CreateClient(vol);
     }
+
+    return client;
     
     
+}
+
+void rechercherPlaceDispo(NewVol*vol){
+
+    long int numVol;
+    system("clear");
+    printf("Voici les vols existants: \n\n");
+    printLesVol(vol);
+
+    printf("Entrez le numéro de vol dont vous voulez voir les informations\n");
+    scanf("%ld", &numVol);
+
+    int verif = rechercherVol(vol, numVol);
+    
+    if(verif==0){
+        while(1){
+                printf("Veuillez-corriger le numéro du client\n");
+                scanf("%ld", &numVol);
+                verif = rechercherVol(vol, numVol);
+                if(verif==1){
+                    break;
+                }
+                printf("Le numéro de vol du client n'est pas bon\n");
+            }
+    }
+
+    while(1){
+
+        if(vol->numVol == numVol){
+            printVol(vol);
+            return;
+        }
+        if(vol->suivant==NULL){
+            printf("Il n'y a aucun vol avec ce numéro\n");
+            return;
+        }
+
+        vol=vol->suivant;
+    }
+
+
+}
+
+
+
+void regarderVolClient(NewVol*vol, NewClient* client){
+    system("clear");
+    NewVol* LesVols = vol;
+    NewClient* Lesclients = client;
+
+    printf("Voici les clients\n\n");
+    while(1){
+        printClient(client);
+        if(client->suivant==NULL){
+            break;
+        }
+        client=client->suivant;
+
+    }
+
+    printf("Entrez le numéro de passeport du client : ");
+    long int numPasseport;
+    scanf("%ld", &numPasseport);
+    printf("\n");
+    client=Lesclients;
+
+    while(1){
+        if(client->numPasseport==numPasseport){
+            break;
+        }
+        if(client->suivant==NULL){
+            break;
+        }
+        client=client->suivant;
+
+    }
+
+    while(1){
+
+        if(client->numVol==vol->numVol){
+
+            printf("Voici le vol du client: \n");
+            printVol(vol);
+            return;
+        }
+
+        if(vol->suivant==NULL){
+
+            printf("Le client n'a pas de vol, voulez-vous lui en rajouter un?\n");
+            printf("1- OUI\n");
+            printf("2- NON\n");
+            int choix;
+            scanf("%d", &choix);
+
+            if(choix==1){
+
+                system("clear");
+                printf("Voici les vols existant :\n\n");
+                printLesVol(LesVols);
+
+                printf("\n Entrez le numéro de vol du client: ");
+                long int numVol;
+                scanf("%ld", &numVol);
+                printf("\n");
+
+                int verif = rechercherVol(LesVols, numVol);
+
+                if(verif==0){
+                    while(1){
+                            printf("Veuillez-corriger le numéro de vol du client\n");
+                            scanf("%ld", &numVol);
+                            verif = rechercherVol(LesVols, numVol);
+                            if(verif==1){
+                                client->numVol=numVol;
+                                break;
+                            }
+                            printf("Le numéro de vol du client n'est pas bon\n");
+                    }
+                    regarderVolClient(LesVols, client);
+                    return;
+                }
+            }
+
+            if(choix == 2){
+                return;
+            }
+        }
+
+        vol = vol->suivant;
+
+
+    }
 }
